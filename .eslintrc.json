@@ -1,0 +1,36 @@
+{
+  "env": {
+    "browser": true,
+    "node": true,
+    "jest": true
+  },
+  "extends": ["airbnb-base", "prettier"],
+  "rules": {
+    "prettier/prettier": ["error"],
+    "react/jsx-uses-react": 2,
+    "react/jsx-uses-vars": 2,
+    "react/react-in-jsx-scope": 2,
+    "max-len": [
+      "error",
+      {
+        "code": 110
+      }
+    ],
+    "no-console": [
+      "error",
+      {
+        "allow": ["log", "warn", "error"]
+      }
+    ],
+    "import/no-extraneous-dependencies": [
+      "error",
+      { "devDependencies": ["**/*.test.js", "**/*.spec.js", "**/*.stories.js", "stories/index.js"] }
+    ]
+  },
+  "plugins": ["react", "prettier"],
+  "parser": "babel-eslint",
+  "ecmaFeatures": {
+    "jsx": true,
+    "modules": true
+  }
+}
