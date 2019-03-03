@@ -11,7 +11,7 @@ const ptTransport = new Papertrail({
   },
   timestamp: true,
   hostname: process.env.PAPERTRAIL_HOSTNAME,
-  program: process.env.PAPERTRAIL_PROGRAM,
+  program: process.env.APPNAME,
 });
 const consoleLogger = new winston.transports.Console({
   level: process.env.LOG_LEVEL,
