@@ -2,9 +2,9 @@
   "name": "client1",
   "version": "0.0.1",
   "description": "A sample Node.js app",
-  "main": "index.js",
+  "main": "server.js",
   "scripts": {
-    "start": "nodemon index.js"
+    "start": "nodemon server.js"
   },
   "devDependencies": {
     "babel-eslint": "^10.0.1",
