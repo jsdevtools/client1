@@ -133,7 +133,10 @@ app.get('/', (req, res) => {
     res.send('Hello Client1!');
   } else {
     console.log(`is not auth'd`);
-    res.redirect(`http://localhost:3000/login/client1`);
+    res.redirect(
+      `http://${process.env.SESSION_DOMAIN ? 'login' : ''}${process.env.SESSION_DOMAIN ||
+        'localhost:3000'}/login/client1`
+    );
   }
 });
 
