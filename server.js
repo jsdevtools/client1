@@ -58,16 +58,6 @@ ptTransport.on('error', err => logger && logger.error(err));
 
 ptTransport.on('connect', message => logger && logger.info(message));
 
-passport.serializeUser((user, cb) => {
-  // console.log('serializing', user);
-  cb(null, user);
-});
-
-passport.deserializeUser((obj, cb) => {
-  // console.log('deserializing', obj);
-  cb(null, obj);
-});
-
 const app = express();
 
 app.set('port', process.env.PORT || 3001);
@@ -86,6 +76,17 @@ app.use(
 
 app.use(passport.initialize());
 app.use(passport.session());
+
+passport.serializeUser((user, cb) => {
+  // console.log('serializing', user);
+  cb(null, user);
+});
+
+passport.deserializeUser((obj, cb) => {
+  // console.log('deserializing', obj);
+  cb(null, obj);
+});
+
 require('./providers/pass-google').setup(passport, app, db.users);
 require('./providers/pass-github').setup(passport, app, db.users);
 
