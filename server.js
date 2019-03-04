@@ -134,8 +134,9 @@ app.get('/', (req, res) => {
   } else {
     console.log(`is not auth'd`);
     res.redirect(
-      `http://${process.env.SESSION_DOMAIN ? 'login' : ''}${process.env.SESSION_DOMAIN ||
-        'localhost:3000'}/login/client1`
+      `${process.env.SESSION_DOMAIN ? 'https' : 'http'}://${
+        process.env.SESSION_DOMAIN ? 'login' : ''
+      }${process.env.SESSION_DOMAIN || 'localhost:3000'}/login/client1`
     );
   }
 });
