@@ -58,12 +58,23 @@ ptTransport.on('error', err => logger && logger.error(err));
 
 ptTransport.on('connect', message => logger && logger.info(message));
 
+passport.serializeUser((user, cb) => {
+  logger.info(`serializing ${user}`);
+  cb(null, user);
+});
+
+passport.deserializeUser((obj, cb) => {
+  logger.info(`deserializing ${obj}`);
+  cb(null, obj);
+});
+
 const app = express();
 
 app.set('port', process.env.PORT || 3001);
 app.use(express.static(`${__dirname}/build`));
 
 app.use(require('morgan')('combined', { stream: logger.stream }));
+app.use(require('cookie-parser')());
 app.use(require('body-parser').urlencoded({ extended: true }));
 app.use(
   require('express-session')({
@@ -78,21 +89,13 @@ app.use(
   })
 );
 
-require('./providers/pass-google').setup(passport, app, db.users);
-require('./providers/pass-github').setup(passport, app, db.users);
-
-passport.serializeUser((user, cb) => {
-  logger.info(`serializing ${user}`);
-  cb(null, user);
-});
-
-passport.deserializeUser((obj, cb) => {
-  logger.info(`deserializing ${obj}`);
-  cb(null, obj);
-});
+app.set('trust proxy', 1);
 
 app.use(passport.initialize());
 app.use(passport.session());
+
+require('./providers/pass-google').setup(passport, app, db.users);
+require('./providers/pass-github').setup(passport, app, db.users);
 
 if (app.get('env') === 'development') {
   // development error handler
