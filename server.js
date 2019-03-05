@@ -67,10 +67,12 @@ app.use(require('morgan')('combined', { stream: logger.stream }));
 app.use(require('body-parser').urlencoded({ extended: true }));
 app.use(
   require('express-session')({
-    domain: process.env.SESSION_DOMAIN || undefined,
+    cookie: {
+      domain: process.env.SESSION_DOMAIN || undefined,
+    },
     secret: 'keyboard cat',
-    resave: false,
-    saveUninitialized: false,
+    resave: true,
+    saveUninitialized: true,
   })
 );
 
