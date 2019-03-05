@@ -1,4 +1,5 @@
 require('dotenv').load();
+const util = require('util');
 const express = require('express');
 const passport = require('passport');
 const winston = require('winston');
@@ -136,7 +137,7 @@ const checkAuthentication = (req, res, next) => {
 
 app.get('/', (req, res) => {
   logger.info(`/ checking authentication`);
-  logger.info(`/ req: ${JSON.stringify(req)}`);
+  logger.info(`/ req: ${JSON.stringify(util.inspect(req))}`);
   if (req.isAuthenticated()) {
     logger.info(`/ isauth'd`);
     res.send('Hello Client1!');
