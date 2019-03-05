@@ -135,13 +135,13 @@ const checkAuthentication = (req, res, next) => {
 */
 
 app.get('/', (req, res) => {
-  console.log('checking authentication');
-  logger.debug(`req: ${req}`);
+  logger.info(`/ checking authentication`);
+  logger.info(`/ req: ${req}`);
   if (req.isAuthenticated()) {
-    console.log(`isauth'd`);
+    logger.info(`/ isauth'd`);
     res.send('Hello Client1!');
   } else {
-    console.log(`is not auth'd`);
+    logger.info(`/ is not auth'd`);
     res.redirect(
       `${process.env.SESSION_DOMAIN ? 'https' : 'http'}://${
         process.env.SESSION_DOMAIN ? 'login' : ''
