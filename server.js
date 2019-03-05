@@ -69,6 +69,7 @@ app.use(
   require('express-session')({
     cookie: {
       domain: process.env.SESSION_DOMAIN || undefined,
+      sameSite: false,
     },
     secret: 'keyboard cat',
     resave: true,
