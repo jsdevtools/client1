@@ -86,6 +86,7 @@ app.use(
     secret: 'keyboard cat',
     resave: true,
     saveUninitialized: true,
+    path: '/',
   })
 );
 
