@@ -2,6 +2,11 @@ require('dotenv').load();
 const util = require('util');
 const express = require('express');
 const passport = require('passport');
+const session = require('express-session');
+const RedisStore = require('connect-redis')(session);
+const morgan = require('morgan');
+const bodyParser = require('body-parser');
+const cookieParser = require('cookie-parser');
 const winston = require('winston');
 const { Papertrail } = require('winston-papertrail');
 
@@ -74,11 +79,15 @@ const app = express();
 app.set('port', process.env.PORT || 3001);
 app.use(express.static(`${__dirname}/build`));
 
-app.use(require('morgan')('combined', { stream: logger.stream }));
-app.use(require('cookie-parser')());
-app.use(require('body-parser').urlencoded({ extended: true }));
+app.use(morgan('combined', { stream: logger.stream }));
+app.use(cookieParser());
+app.use(bodyParser.urlencoded({ extended: true }));
+
 app.use(
-  require('express-session')({
+  session({
+    store: new RedisStore({
+      url: process.env.REDIS_URL,
+    }),
     cookie: {
       domain: process.env.SESSION_DOMAIN || undefined,
       sameSite: false,
