@@ -66,30 +66,33 @@ app.use(express.static(`${__dirname}/build`));
 app.use(require('morgan')('combined', { stream: logger.stream }));
 app.use(require('body-parser').urlencoded({ extended: true }));
 app.use(
-  require('cookie-session')({
-    domain: process.env.SESSION_DOMAIN || undefined,
-    sameSite: false,
+  require('express-session')({
+    cookie: {
+      domain: process.env.SESSION_DOMAIN || undefined,
+      sameSite: false,
+      secure: false,
+    },
     secret: 'keyboard cat',
     resave: true,
     saveUninitialized: true,
   })
 );
 
-app.use(passport.initialize());
-app.use(passport.session());
+require('./providers/pass-google').setup(passport, app, db.users);
+require('./providers/pass-github').setup(passport, app, db.users);
 
 passport.serializeUser((user, cb) => {
-  // console.log('serializing', user);
+  console.log('serializing', user);
   cb(null, user);
 });
 
 passport.deserializeUser((obj, cb) => {
-  // console.log('deserializing', obj);
+  console.log('deserializing', obj);
   cb(null, obj);
 });
 
-require('./providers/pass-google').setup(passport, app, db.users);
-require('./providers/pass-github').setup(passport, app, db.users);
+app.use(passport.initialize());
+app.use(passport.session());
 
 if (app.get('env') === 'development') {
   // development error handler
