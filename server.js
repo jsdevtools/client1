@@ -82,12 +82,12 @@ require('./providers/pass-google').setup(passport, app, db.users);
 require('./providers/pass-github').setup(passport, app, db.users);
 
 passport.serializeUser((user, cb) => {
-  console.log('serializing', user);
+  logger.info(`serializing ${user}`);
   cb(null, user);
 });
 
 passport.deserializeUser((obj, cb) => {
-  console.log('deserializing', obj);
+  logger.info(`deserializing ${obj}`);
   cb(null, obj);
 });
 
@@ -132,7 +132,7 @@ const checkAuthentication = (req, res, next) => {
 
 app.get('/', (req, res) => {
   console.log('checking authentication');
-  // console.log('req:', req);
+  logger.debug(`req: ${req}`);
   if (req.isAuthenticated()) {
     console.log(`isauth'd`);
     res.send('Hello Client1!');
