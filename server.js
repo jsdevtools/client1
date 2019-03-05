@@ -59,7 +59,7 @@ ptTransport.on('error', err => logger && logger.error(err));
 ptTransport.on('connect', message => logger && logger.info(message));
 
 passport.serializeUser((user, cb) => {
-  logger.info(`serializing ${user}`);
+  logger.info(`serializing ${JSON.stringify(user)}`);
   cb(null, user);
 });
 
@@ -136,7 +136,7 @@ const checkAuthentication = (req, res, next) => {
 
 app.get('/', (req, res) => {
   logger.info(`/ checking authentication`);
-  logger.info(`/ req: ${req}`);
+  logger.info(`/ req: ${JSON.stringify(req)}`);
   if (req.isAuthenticated()) {
     logger.info(`/ isauth'd`);
     res.send('Hello Client1!');
