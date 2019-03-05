@@ -66,11 +66,9 @@ app.use(express.static(`${__dirname}/build`));
 app.use(require('morgan')('combined', { stream: logger.stream }));
 app.use(require('body-parser').urlencoded({ extended: true }));
 app.use(
-  require('express-session')({
-    cookie: {
-      domain: process.env.SESSION_DOMAIN || undefined,
-      sameSite: false,
-    },
+  require('cookie-session')({
+    domain: process.env.SESSION_DOMAIN || undefined,
+    sameSite: false,
     secret: 'keyboard cat',
     resave: true,
     saveUninitialized: true,
