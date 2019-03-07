@@ -130,26 +130,24 @@ if (app.get('env') === 'development') {
   });
 }
 
-/*
-const checkAuthentication = (req, res, next) => {
-  console.log('checking authentication');
-  if (req.isAuthenticated()) {
-    console.log('isauth');
-    res.redirect(`/login/${req.params.app}/${req.params.provider}`);
-  } else {
-    console.log(`is not auth'd`);
-    // not auth'd, choose provider
-    next();
-  }
-};
-*/
+app.get('/logout', (req, res) => {
+  req.session.destroy();
+  res.redirect('/');
+});
 
 app.get('/', (req, res) => {
   logger.info(`/ checking authentication`);
   logger.info(`/ req: ${JSON.stringify(util.inspect(req))}`);
   if (req.isAuthenticated()) {
     logger.info(`/ isauth'd`);
-    res.send('Hello Client1!');
+    res.send(`
+    <html>
+      <body>
+        Hello Client1!<br />
+        <a href="/logout">Logout</a>
+      </body>
+    </html>
+  `);
   } else {
     logger.info(`/ is not auth'd`);
     res.redirect(
