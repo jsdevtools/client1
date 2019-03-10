@@ -59,6 +59,3 @@ typings/
 
 # next.js build output
 .next
-
-client1/build
-client1
