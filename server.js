@@ -133,7 +133,7 @@ if (app.get('env') === 'development') {
 
 const checkAuthentication = (req, res, next) => {
   logger.info(`checking authentication`);
-  if (req.isAuthenticated()) {
+  if (!req.isAuthenticated()) {
     logger.info(`is !auth`);
     res.redirect('/logout');
   } else {
