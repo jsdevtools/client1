@@ -1,5 +1,5 @@
 require('dotenv').load();
-const util = require('util');
+// const util = require('util');
 const express = require('express');
 const passport = require('passport');
 const session = require('express-session');
@@ -9,6 +9,7 @@ const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
 const winston = require('winston');
 const { Papertrail } = require('winston-papertrail');
+const path = require('path');
 
 const db = {
   users: {
@@ -51,7 +52,7 @@ ptTransport.log = function(level, msg, meta, callback) {
 
 // eslint-disable-next-line new-cap
 const logger = new winston.createLogger({
-  transports: [ptTransport, consoleLogger],
+  transports: [/* ptTransport, */ consoleLogger],
 });
 
 logger.stream = {
@@ -130,32 +131,39 @@ if (app.get('env') === 'development') {
   });
 }
 
+const checkAuthentication = (req, res, next) => {
+  logger.info(`checking authentication`);
+  if (req.isAuthenticated()) {
+    logger.info(`is !auth`);
+    res.redirect('/logout');
+  } else {
+    logger.info(`is +auth`);
+    next();
+  }
+};
+
 app.get('/logout', (req, res) => {
-  req.session.destroy();
+  if (req.session !== undefined) req.session.destroy();
   res.redirect('/');
 });
 
-app.get('/', (req, res) => {
-  logger.info(`/ checking authentication`);
-  logger.info(`/ req: ${JSON.stringify(util.inspect(req))}`);
-  if (req.isAuthenticated()) {
-    logger.info(`/ isauth'd`);
-    res.send(`
-    <html>
-      <body>
-        Hello Client1!<br />
-        <a href="/logout">Logout</a>
-      </body>
-    </html>
-  `);
-  } else {
-    logger.info(`/ is not auth'd`);
-    res.redirect(
+app.get('*', checkAuthentication, (req, res, next) => {
+  logger.info(`* checking authentication`);
+  if (!req.isAuthenticated()) {
+    logger.info(`* is not auth'd`);
+    return res.redirect(
       `${process.env.SESSION_DOMAIN ? 'https' : 'http'}://${
         process.env.SESSION_DOMAIN ? 'login' : ''
       }${process.env.SESSION_DOMAIN || 'localhost:3000'}/login/client1`
     );
   }
+  next();
+});
+
+app.use(express.static(path.join(__dirname, 'client1', 'build')));
+
+app.get('*', (req, res, _next) => {
+  res.sendFile(path.join(__dirname, 'client1', 'build', 'index.html'));
 });
 
 app.listen(app.get('port'), () => {

@@ -4,6 +4,7 @@
   "description": "A sample Node.js app",
   "main": "server.js",
   "scripts": {
+    "postinstall": "cd client1 && npm install && npm run build",
     "start": "nodemon server.js"
   },
   "devDependencies": {
