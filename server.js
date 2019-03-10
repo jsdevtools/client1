@@ -147,7 +147,7 @@ app.get('/logout', (req, res) => {
   res.redirect('/');
 });
 
-app.get('*', checkAuthentication, (req, res, next) => {
+app.get('*', (req, res, next) => {
   logger.info(`* checking authentication`);
   if (!req.isAuthenticated()) {
     logger.info(`* is not auth'd`);
