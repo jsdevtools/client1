@@ -11,6 +11,18 @@ const Contact = () => (
   <span style={{background:'green'}}>Contact Content</span>
 );
 
+const Logout = () => (
+  <div>
+    <a
+      className="App-link"
+      style={{background:'purple'}}
+      href="http://localhost:3001/logout"
+      // target="_blank"
+      //rel="noopener noreferrer"
+    >Log Out</a>
+  </div>
+);
+
 const DefaultContent = () => (
   <a
     className="App-link"
@@ -41,6 +53,7 @@ class App extends Component {
             <Route path="/contact" component={Contact} />
             <Route component={DefaultContent} />
           </Switch>
+          <Logout />
         </header>
       </div>
     );

@@ -1,5 +1,5 @@
 require('dotenv').load();
-// const util = require('util');
+
 const express = require('express');
 const passport = require('passport');
 const session = require('express-session');
@@ -7,15 +7,14 @@ const RedisStore = require('connect-redis')(session);
 const morgan = require('morgan');
 const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
-const winston = require('winston');
-const { Papertrail } = require('winston-papertrail');
 const path = require('path');
+
+const { logger } = require('./logger');
 
 const db = {
   users: {
     newUser: (userInfo, onSuccess, onFailure) => {
       try {
-        // db.users.push(userInfo);
         onSuccess(userInfo);
       } catch (err) {
         onFailure(err);
@@ -23,47 +22,6 @@ const db = {
     },
   },
 };
-
-const ptTransport = new Papertrail({
-  host: process.env.PAPERTRAIL_URL,
-  port: process.env.PAPERTRAIL_PORT,
-  logFormat: (level, message) => {
-    return `[${level}] ${message}`;
-  },
-  timestamp: true,
-  hostname: process.env.PAPERTRAIL_HOSTNAME,
-  program: process.env.APPNAME,
-});
-const consoleLogger = new winston.transports.Console({
-  level: process.env.LOG_LEVEL,
-  timestamp() {
-    return new Date().toString();
-  },
-  colorize: true,
-});
-
-// monkey pach papertrail to remove meta from log() args
-const { log } = ptTransport;
-// eslint-disable-next-line func-names
-ptTransport.log = function(level, msg, meta, callback) {
-  const cb = callback === undefined ? meta : callback;
-  return log.apply(this, [level, msg, cb]);
-};
-
-// eslint-disable-next-line new-cap
-const logger = new winston.createLogger({
-  transports: [/* ptTransport, */ consoleLogger],
-});
-
-logger.stream = {
-  write: (message, _encoding) => {
-    logger.info(message);
-  },
-};
-
-ptTransport.on('error', err => logger && logger.error(err));
-
-ptTransport.on('connect', message => logger && logger.info(message));
 
 passport.serializeUser((user, cb) => {
   logger.info(`serializing ${JSON.stringify(user)}`);
@@ -76,14 +34,10 @@ passport.deserializeUser((obj, cb) => {
 });
 
 const app = express();
-
 app.set('port', process.env.PORT || 3001);
-app.use(express.static(`${__dirname}/build`));
-
 app.use(morgan('combined', { stream: logger.stream }));
 app.use(cookieParser());
 app.use(bodyParser.urlencoded({ extended: true }));
-
 app.use(
   session({
     store: new RedisStore({
@@ -100,15 +54,21 @@ app.use(
     path: '/',
   })
 );
-
 app.set('trust proxy', 1);
-
 app.use(passport.initialize());
 app.use(passport.session());
 
+/*
+  Passport providers.
+*/
 require('./providers/pass-google').setup(passport, app, db.users);
 require('./providers/pass-github').setup(passport, app, db.users);
+require('./providers/pass-local').setup(passport, app, db.users);
 
+/*
+  In development: Print stack trace on errors; also log URLs of all requests
+  In production: Don't print stack trace on errors; also don't log URLs of all requests
+*/
 if (app.get('env') === 'development') {
   // development error handler
   // will print stacktrace
@@ -118,6 +78,11 @@ if (app.get('env') === 'development') {
       status: 'error',
       message: err,
     });
+  });
+  // will log urls
+  app.use((req, _res, next) => {
+    logger.info(`urlIt: ${req.url}`);
+    next();
   });
 } else {
   // production error handler
@@ -131,8 +96,13 @@ if (app.get('env') === 'development') {
   });
 }
 
+/*
+  Gets called when trying to access protected resource.
+  If not authenticated, redirects to /logout
+  /logout will delete session info if it exists, then redirect to /login
+*/
 const checkAuthentication = (req, res, next) => {
-  logger.info(`checking authentication`);
+  console.log(`>> checkAuthentication`);
   if (!req.isAuthenticated()) {
     logger.info(`is !auth`);
     res.redirect('/logout');
@@ -142,27 +112,74 @@ const checkAuthentication = (req, res, next) => {
   }
 };
 
+/*
+  Log the user out by destroying session info.
+  Then redirect to login page.
+*/
 app.get('/logout', (req, res) => {
+  console.log('>> /logout');
   if (req.session !== undefined) req.session.destroy();
-  res.redirect('/');
-});
-
-app.get('*', (req, res, next) => {
-  logger.info(`* checking authentication`);
-  if (!req.isAuthenticated()) {
-    logger.info(`* is not auth'd`);
-    return res.redirect(
+  if (process.env.APP_LOGIN_PAGE === 'true') {
+    res.redirect(`/login`);
+  } else {
+    res.redirect(
       `${process.env.SESSION_DOMAIN ? 'https' : 'http'}://${
         process.env.SESSION_DOMAIN ? 'login' : ''
       }${process.env.SESSION_DOMAIN || 'localhost:3000'}/login/client1`
     );
   }
-  next();
 });
 
-app.use(express.static(path.join(__dirname, 'client1', 'build')));
+/*
+  Prompt user to login.
+*/
+app.get('/login', (req, res) => {
+  console.log('>> /login');
+  return res.send(`
+    <html>
+      <head>
+          <title>Client1 Login</title>
+      </head>
+      <body>
+      <h1>Login</h1>
+        Hello! Choose provider to log into Client1.<br />
+        <a href="/login/${req.params.app}/github">Github</a><br />
+        <a href="/login/${req.params.app}/google">Google</a><br />
+        <h3>Local</h3>
+        <form action='${process.env.SESSION_DOMAIN ? 'https' : 'http'}://${
+    process.env.SESSION_DOMAIN ? 'login' : ''
+  }${process.env.SESSION_DOMAIN || 'localhost:3000'}/login/client1/local' method='post'>
+          <div>
+            <label for='email'>Email:</label><br/>
+            <input type='text' name='email' id='email' require>
+          </div>
+          <br/>
+          <div>
+            <label for='pass'>Password:(8 characters minimum)</label><br/>
+            <input type='password' name='password' id='pass' minlength='8' required>
+          </div>
+          <br/>
+          <input type='submit' value='Login'><br/>
+        </form>
+      </body>
+    </html>
+  `);
+});
 
-app.get('*', (req, res, _next) => {
+/*
+  If static asset, serve static asset. 
+  Don't serve index.html, that gets served only if authenticated.
+  If not static asset, then next().
+*/
+app.use(express.static(path.join(__dirname, 'client1', 'build'), { index: false }));
+
+/*
+  Not static asset.
+  Check if authenticated:
+    True: Serve react app.
+    False: Will redirect to login page
+*/
+app.get('*', checkAuthentication, (_req, res, _next) => {
   res.sendFile(path.join(__dirname, 'client1', 'build', 'index.html'));
 });
 
