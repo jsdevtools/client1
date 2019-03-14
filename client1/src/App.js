@@ -16,7 +16,7 @@ const Logout = () => (
     <a
       className="App-link"
       style={{background:'purple'}}
-      href="http://localhost:3001/logout"
+      href="/logout"
       // target="_blank"
       //rel="noopener noreferrer"
     >Log Out</a>
