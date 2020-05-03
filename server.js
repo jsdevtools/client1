@@ -8,7 +8,6 @@ const morgan = require('morgan');
 const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
 const path = require('path');
-
 const { logger } = require('./logger');
 
 const db = {
@@ -24,12 +23,10 @@ const db = {
 };
 
 passport.serializeUser((user, cb) => {
-  logger.info(`serializing ${JSON.stringify(user)}`);
   cb(null, user);
 });
 
 passport.deserializeUser((obj, cb) => {
-  logger.info(`deserializing ${obj}`);
   cb(null, obj);
 });
 
@@ -81,14 +78,14 @@ if (app.get('env') === 'development') {
   });
   // will log urls
   app.use((req, _res, next) => {
-    logger.info(`urlIt: ${req.url}`);
+    logger.info(`req.url: ${req.url}`);
     next();
   });
 } else {
   // production error handler
   // no stacktraces leaked to user
   app.use((err, req, res, _next) => {
-    logger.warn(JSON.stringify(err));
+    logger.warn(JSON.stringify(err.message));
     res.status(err.status || 500).json({
       status: 'error',
       message: err.message,
@@ -102,12 +99,9 @@ if (app.get('env') === 'development') {
   /logout will delete session info if it exists, then redirect to /login
 */
 const checkAuthentication = (req, res, next) => {
-  console.log(`>> checkAuthentication`);
   if (!req.isAuthenticated()) {
-    logger.info(`is !auth`);
     res.redirect('/logout');
   } else {
-    logger.info(`is +auth`);
     next();
   }
 };
@@ -117,8 +111,10 @@ const checkAuthentication = (req, res, next) => {
   Then redirect to login page.
 */
 app.get('/logout', (req, res) => {
-  console.log('>> /logout');
-  if (req.session !== undefined) req.session.destroy();
+  if (req.session !== undefined) {
+    req.session.destroy();
+  }
+  res.clearCookie('user');
   if (process.env.APP_LOGIN_PAGE === 'true') {
     res.redirect(`/login`);
   } else {
@@ -133,8 +129,10 @@ app.get('/logout', (req, res) => {
 /*
   Prompt user to login.
 */
-app.get('/login', (req, res) => {
-  console.log('>> /login');
+app.get('/login', (req, res, _next) => {
+  res.sendFile(path.join(__dirname, 'client1', 'build', 'index.html'));
+});
+app.get('/loginxxx', (req, res) => {
   return res.send(`
     <html>
       <head>
@@ -143,12 +141,8 @@ app.get('/login', (req, res) => {
       <body>
       <h1>Login</h1>
         Hello! Choose provider to log into Client1.<br />
-        <a href="${process.env.SESSION_DOMAIN ? 'https' : 'http'}://${
-          process.env.SESSION_DOMAIN ? 'login' : ''
-        }${process.env.SESSION_DOMAIN || 'localhost:3000'}/login/client1/github">Github</a><br />
-        <a href="${process.env.SESSION_DOMAIN ? 'https' : 'http'}://${
-          process.env.SESSION_DOMAIN ? 'login' : ''
-        }${process.env.SESSION_DOMAIN || 'localhost:3000'}/login/client1/google">Google</a><br />
+        <a href="/login/${req.params.app}/github">Github</a><br />
+        <a href="/login/${req.params.app}/google">Google</a><br />
         <h3>Local</h3>
         <form action='${process.env.SESSION_DOMAIN ? 'https' : 'http'}://${
     process.env.SESSION_DOMAIN ? 'login' : ''
@@ -183,7 +177,8 @@ app.use(express.static(path.join(__dirname, 'client1', 'build'), { index: false 
     True: Serve react app.
     False: Will redirect to login page
 */
-app.get('*', checkAuthentication, (_req, res, _next) => {
+app.get('*', checkAuthentication, (req, res, _next) => {
+  res.cookie('user', req.user, { path: '/', secure: false });
   res.sendFile(path.join(__dirname, 'client1', 'build', 'index.html'));
 });
 
