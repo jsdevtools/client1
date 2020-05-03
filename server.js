@@ -143,8 +143,8 @@ app.get('/login', (req, res) => {
       <body>
       <h1>Login</h1>
         Hello! Choose provider to log into Client1.<br />
-        <a href="/login/${req.params.app}/github">Github</a><br />
-        <a href="/login/${req.params.app}/google">Google</a><br />
+        <a href="/login/client1/github">Github</a><br />
+        <a href="/login/client1/google">Google</a><br />
         <h3>Local</h3>
         <form action='${process.env.SESSION_DOMAIN ? 'https' : 'http'}://${
     process.env.SESSION_DOMAIN ? 'login' : ''
