@@ -132,6 +132,7 @@ app.get('/logout', (req, res) => {
 app.get('/login', (req, res, _next) => {
   res.sendFile(path.join(__dirname, 'client1', 'build', 'index.html'));
 });
+/*
 app.get('/loginxxx', (req, res) => {
   return res.send(`
     <html>
@@ -163,7 +164,7 @@ app.get('/loginxxx', (req, res) => {
     </html>
   `);
 });
-
+*/
 /*
   If static asset, serve static asset. 
   Don't serve index.html, that gets served only if authenticated.
